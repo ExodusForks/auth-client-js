@@ -8,7 +8,7 @@ import {
   isJsonRpcResponse,
   isJsonRpcResult,
 } from "@exodus/walletconnect-jsonrpc-utils";
-import { RelayerTypes, Verify } from "@exodus/walletconnect-types";
+import { RelayerTypes } from "@exodus/walletconnect-types";
 import { getInternalError, hashKey, TYPE_1 } from "@exodus/walletconnect-utils";
 import { AUTH_CLIENT_PUBLIC_KEY_NAME, ENGINE_RPC_OPTS } from "../constants";
 import { AuthClientTypes, AuthEngineTypes, IAuthEngine, JsonRpcTypes } from "../types";
@@ -17,6 +17,7 @@ import { verifySignature } from "../utils/signature";
 import { getPendingRequest, getPendingRequests } from "../utils/store";
 import { isValidRequest, isValidRespond } from "../utils/validators";
 import { hashMessage } from "../utils/crypto";
+import { buildVerifyContext } from "../utils/verifyContext";
 
 export class AuthEngine extends IAuthEngine {
   private initialized = false;
@@ -361,7 +362,7 @@ export class AuthEngine extends IAuthEngine {
       });
 
       const hash = hashMessage(JSON.stringify(payload));
-      const verifyContext = await this.getVerifyContext(hash, this.client.metadata);
+      const verifyContext = await this.getVerifyContext(hash, requester.metadata);
 
       this.client.emit("auth_request", {
         id: payload.id,
@@ -426,15 +427,13 @@ export class AuthEngine extends IAuthEngine {
     }
   };
 
-  private getVerifyContext = async (_hash: string, metadata: AuthClientTypes.Metadata) => {
-    const context: Verify.Context = {
-      verified: {
-        verifyUrl: metadata.verifyUrl || "",
-        validation: "UNKNOWN",
-        origin: metadata.url || "",
+  private getVerifyContext = (hash: string, metadata: AuthClientTypes.Metadata) =>
+    buildVerifyContext(
+      {
+        resolve: (args) => this.client.core.verify.resolve(args),
+        logError: (e) => this.client.logger.error(e),
       },
-    };
-
-    return context;
-  };
+      hash,
+      metadata,
+    );
 }
