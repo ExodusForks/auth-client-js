@@ -1,7 +1,7 @@
 {
   "name": "@exodus/walletconnect-auth-client",
   "description": "Auth Client for WalletConnect Protocol",
-  "version": "2.1.0-exodus.6",
+  "version": "2.1.0-exodus.7",
   "author": "WalletConnect, Inc. <walletconnect.com>",
   "homepage": "https://github.com/WalletConnect/auth-client-js/",
   "license": "Apache-2.0",
